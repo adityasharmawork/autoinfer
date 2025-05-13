@@ -6,7 +6,7 @@ A zero-configuration CLI utility and library to automatically generate TypeScrip
 
 ---
 
-
+## Features
 
 - **Multi-source support**: JSON files, API endpoints, and CSV files.  
 - **Output formats**: TypeScript interfaces or JSON Schema.  
