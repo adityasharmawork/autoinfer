@@ -1,6 +1,6 @@
-# TypeInfer
+# AutoInfer
 
-[![npm version](https://img.shields.io/npm/v/typeinfer)](https://www.npmjs.com/package/typeinfer) 
+[![npm version](https://img.shields.io/npm/v/autoinfer)](https://www.npmjs.com/package/autoinfer) 
 
 A zero-configuration CLI utility and library to automatically generate TypeScript interfaces or JSON Schemas from JSON files, API responses, or CSV data. TypeInfer accelerates TypeScript development by inferring types, optional properties, and custom fields interactively or via command-line arguments, with robust error handling.
 
@@ -23,22 +23,22 @@ A zero-configuration CLI utility and library to automatically generate TypeScrip
 ## Installation
 
 ```bash
-npm install -g typeinfer    # global install for CLI
+npm install -g autoinfer    # global install for CLI
 # or as a dev dependency:
-npm install --save-dev typeinfer
+npm install --save-dev autoinfer
 ```
 ---
 
 ## CLI Usage
 
-## TypeInfer supports two modes:
+## AutoInfer supports two modes:
 
 ### 1. Interactive Mode (default)
 
 Run the CLI without arguments:
 
 ```bash
-$ typeinfer
+$ autoinfer
 ```
 
 You will be prompted to:
@@ -61,8 +61,8 @@ Provide data:
 
 ### Example (JSON file → TypeScript)
 ```bash
-$ typeinfer
-Welcome to TypeInfer - Interactive Mode
+$ autoinfer
+Welcome to AutoInfer - Interactive Mode
 ✔ Select data source type: JSON
 ✔ Enter JSON file path: ./data/config.json
 ✔ Select output format: TypeScript
@@ -81,7 +81,7 @@ Welcome to TypeInfer - Interactive Mode
 All interactive prompts can be replaced by CLI flags:
 
 ```bash
-$ typeinfer \
+$ autoinfer \
   --source api \
   --endpoint https://api.example.com/users \
   --format ts \
@@ -107,25 +107,25 @@ Flag	Alias	Description	Required
 Examples
 ```bash
 # 1. CSV → TS with optional inference
-$ typeinfer -s csv -f ./data/users.csv -n User \
+$ autoinfer -s csv -f ./data/users.csv -n User \
   --format ts --inferOptional true --prettify true -o ./types/users.ts
 
 # 2. JSON file → JSON Schema
-$ typeinfer -s json -f ./input/config.json \
+$ autoinfer -s json -f ./input/config.json \
   --format jsonSchema -n ConfigSchema -o ./schemas/config.schema.json
 
 # 3. API → TS with extra custom fields
-$ typeinfer -s api -u https://api.example.com/items \
+$ autoinfer -s api -u https://api.example.com/items \
   --format ts --name ItemList --inferOptional true \
   --extraFields notes:string,tags:string[] --output ./types/items.ts
 ```
 
 ---
 
-Refer to the TypeInfer API docs for full details.
+Refer to the AutoInfer API docs for full details.
 
 ## Error Handling
-TypeInfer uses a custom CliError to present clear messages.
+AujtoInfer uses a custom CliError to present clear messages.
 
 Common errors include:
 
@@ -138,5 +138,5 @@ Common errors include:
 -**CSV parse errors**:
 "Failed to parse CSV file: Unexpected header row."
 
-All errors exit with code 1, making TypeInfer safe for CI workflows.
+All errors exit with code 1, making AtoInfer safe for CI workflows.
 

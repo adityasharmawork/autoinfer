@@ -1,11 +1,11 @@
 {
-  "name": "typeinfer",
+  "name": "autoinfer",
   "version": "1.0.3",
   "description": "Automatically generate TypeScript interfaces or JSON schemas from various data sources",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "typeinfer": "./bin/cli.js"
+    "autoinfer": "./bin/cli.js"
   },
   "scripts": {
     "build": "tsc",

@@ -165,7 +165,7 @@ async function processGeneration(opts: GenerationOptions) {
 }
 
 async function runInteractive() {
-  console.log(chalk.bold.cyan('Welcome to TypeInfer - Interactive Mode'));
+  console.log(chalk.bold.cyan('Welcome to AutoInfer - Interactive Mode'));
   const opts: Partial<GenerationOptions> = {};
 
   try {
@@ -338,7 +338,7 @@ async function runInteractive() {
 
 const program = new Command();
 program
-  .name('typeinfer')
+  .name('autoinfer')
   .version('1.0.3') // Incremented version
   .option('-s, --source <type>', 'Data source type (api, json, csv)')
   .option('-u, --url <url>', 'API endpoint URL for API source')
