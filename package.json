@@ -1,6 +1,6 @@
 {
   "name": "autoinfer",
-  "version": "1.2.0",
+  "version": "1.0.0",
   "description": "Automatically generate TypeScript interfaces or JSON schemas from various data sources",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
