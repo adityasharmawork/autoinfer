@@ -54,16 +54,29 @@ function generateJsonSchemaFromSchema(schemaNode: SchemaType, options: GenerateO
           jsonSchemaNode.properties[key] = generateJsonSchemaFromSchema(value, options);
         }
       }
-      if (options.inferOptional) {
+      
+      // if (options.inferOptional) {
+      //   if (schemaNode.required && schemaNode.required.length > 0) {
+      //     jsonSchemaNode.required = schemaNode.required;
+      //   }
+      // } else {
+      //    if (schemaNode.properties) {
+      //        jsonSchemaNode.required = Object.keys(schemaNode.properties);
+      //    }
+
+      // }
+
+      if (options.inferOptional) { // This will be false for SQL if user doesn't override
         if (schemaNode.required && schemaNode.required.length > 0) {
           jsonSchemaNode.required = schemaNode.required;
         }
-      } else {
+      } else { // This branch will be hit for SQL
          if (schemaNode.properties) {
              jsonSchemaNode.required = Object.keys(schemaNode.properties);
          }
-
       }
+
+
       if (jsonSchemaNode.required && jsonSchemaNode.required.length === 0) {
           delete jsonSchemaNode.required;
       }
