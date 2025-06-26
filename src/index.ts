@@ -450,8 +450,8 @@ import { parseJsonFile, parseJsonString } from './parsers/json';
 import { parseApiResponse } from './parsers/api';
 import { parseCsvFile } from './parsers/csv';
 // --- New Parser Imports ---
-import { parseMongoDbCollection } from './parsers/mongodb'; // Create this file
-import { parseSqlTable } from './parsers/sql'; // Create this file
+import { parseMongoDbCollection } from './parsers/mongodb';
+import { parseSqlTable } from './parsers/sql'; 
 
 import { generateTypeScript, GenerateOptions as TSGenerateOptions } from './generators/typescript';
 import { generateJsonSchema, GenerateOptions as JsonSchemaGenerateOptions } from './generators/jsonSchema';
@@ -466,10 +466,10 @@ interface CustomField {
 }
 
 interface GenerationOptions {
-  source: 'api' | 'json' | 'csv' | 'mongodb' | 'mysql' | 'postgresql'; // Added new sources
-  url?: string; // For API
-  file?: string; // For JSON, CSV
-  jsonInput?: string; // For direct JSON input for CLI
+  source: 'api' | 'json' | 'csv' | 'mongodb' | 'mysql' | 'postgresql'; 
+  url?: string; 
+  file?: string; 
+  jsonInput?: string; 
   output: 'typescript' | 'jsonschema';
   interfaceName: string;
   inferOptional: boolean;
@@ -478,12 +478,11 @@ interface GenerationOptions {
   customFields?: CustomField[];
   verbose?: boolean;
 
-  // --- Database Specific Options ---
   dbConnectionString?: string;
-  dbName?: string; // For MongoDB
-  collectionName?: string; // For MongoDB
-  dbSchema?: string; // For SQL (e.g., 'public' in PostgreSQL, or database name in MySQL)
-  tableName?: string; // For SQL
+  dbName?: string;
+  collectionName?: string; 
+  dbSchema?: string; 
+  tableName?: string; 
 }
 
 
@@ -494,27 +493,23 @@ function dedupeUnions(text: string, format: 'typescript' | 'jsonschema', prettif
     do {
         previousText = dedupedText;
         dedupedText = dedupedText.replace(/(\b\w+(?:\[\])?\b)\s*\|\s*\1(?!\w)/g, '$1');
-        // Sort union members alphabetically for consistent output
         dedupedText = dedupedText.replace(/(\b\w+(?:\[\])?\b)\s*\|\s*(\b\w+(?:\[\])?\b)/g, (match, p1, p2) => {
             const types = [p1, p2].sort((a, b) => a.localeCompare(b));
             return types.join(' | ');
         });
-        // Second pass to ensure deduplication after sorting if types became adjacent
         dedupedText = dedupedText.replace(/(\b\w+(?:\[\])?\b)\s*\|\s*\1(?!\w)/g, '$1'); 
     } while (previousText !== dedupedText);
     return dedupedText;
   }
-  // For JSON Schema
   try {
     const obj = JSON.parse(text);
     function walk(node: any) {
       if (node && typeof node === 'object') {
         if (Array.isArray(node.anyOf)) {
           const seen = new Set<string>();
-          // Sort before filtering to make deduplication consistent
           node.anyOf.sort((a: any, b: any) => JSON.stringify(a).localeCompare(JSON.stringify(b)));
           node.anyOf = node.anyOf.filter((sub: any) => {
-            const key = JSON.stringify(sub); // Key for deduplication
+            const key = JSON.stringify(sub); 
             if (seen.has(key)) return false;
             seen.add(key);
             return true;
@@ -523,9 +518,6 @@ function dedupeUnions(text: string, format: 'typescript' | 'jsonschema', prettif
             Object.assign(node, node.anyOf[0]);
             delete node.anyOf;
           } else if (node.anyOf.length === 0) {
-            // If all union members were duplicates and removed, what should it be?
-            // Maybe a generic object or a specific type indicating an issue.
-            // For now, let's remove 'anyOf' or set to a default.
             delete node.anyOf;
             node.description = node.description || "Empty union after deduplication";
           }
@@ -536,7 +528,6 @@ function dedupeUnions(text: string, format: 'typescript' | 'jsonschema', prettif
     walk(obj);
     return JSON.stringify(obj, null, prettify ? 2 : undefined);
   } catch (e) {
-    // If parsing fails, return original text
     console.warn(chalk.yellow("Could not deduplicate JSON schema unions due to a parsing error."));
     return text;
   }
@@ -565,7 +556,6 @@ async function processGeneration(opts: GenerationOptions) {
         if (!opts.file) throw new Error('CSV source selected but no file path was provided.');
         data = await parseCsvFile(opts.file);
         break;
-      // --- New Database Cases ---
       case 'mongodb':
         if (!opts.dbConnectionString || !opts.dbName || !opts.collectionName) {
           throw new Error('MongoDB source requires connection string, database name, and collection name.');
@@ -582,8 +572,6 @@ async function processGeneration(opts: GenerationOptions) {
         data = await parseSqlTable(opts.source, opts.dbConnectionString, opts.tableName, opts.dbSchema);
         break;
       default:
-        // This check is for type safety, but the input should be validated before this.
-        // To satisfy TypeScript, we can cast `opts.source` or ensure all paths return.
         const exhaustiveCheck: never = opts.source; 
         throw new Error(`Invalid data source: ${exhaustiveCheck}`);
     }
@@ -613,8 +601,6 @@ async function processGeneration(opts: GenerationOptions) {
             fieldSchemaType = { type: field.type } as SchemaType; // Primitive
           }
           data.properties![field.name] = fieldSchemaType;
-          // If inferOptional is false, all fields (including custom) should ideally be required
-          // unless explicitly marked. For simplicity, custom fields are not added to 'required' by default here.
         });
       }
     }
@@ -655,9 +641,7 @@ async function processGeneration(opts: GenerationOptions) {
     if (opts.verbose && error.stack) {
       console.error(chalk.grey(error.stack));
     }
-    // No longer throwing error here to allow CLI to exit gracefully if called from program.parse
-    // throw error; 
-    process.exitCode = 1; // Set exit code to indicate failure
+    process.exitCode = 1; 
   }
 }
 
@@ -784,7 +768,7 @@ async function runInteractive() {
 const program = new Command();
 program
   .name('autoinfer')
-  .version('1.1.0') // Updated version
+  .version('1.1.0') 
   .option('-s, --source <type>', 'Data source (api, json, csv, mongodb, mysql, postgresql)')
   .option('-u, --url <url>', 'API URL (for source=api)')
   .option('-f, --file <path>', 'File path (for source=json or source=csv)')
@@ -797,7 +781,7 @@ program
   .option('-p, --prettify', 'Prettify output', false)
   .option('--outFile <path>', 'Output file path (console if not specified)')
   .option('--verbose', 'Enable verbose error logging', false)
-  // Database options
+
   .option('--dbConnectionString <string>', 'Database connection string')
   .option('--dbName <string>', 'Database name (for mongodb)')
   .option('--collectionName <string>', 'Collection name (for mongodb)')
@@ -805,7 +789,6 @@ program
   .option('--tableName <string>', 'Table name (for mysql, postgresql)')
   .action(async (cmdOpts) => {
     const rawArgs = process.argv.slice(2);
-    // A more robust way to check if any actual command options were passed, besides --verbose or just calling the command
     const relevantArgs = rawArgs.filter(arg => !['--verbose', '--help', '-V', '--version'].includes(arg) && !program.options.find(o => o.short === arg || o.long === arg && typeof cmdOpts[o.attributeName()] === 'boolean'));
     
     if (relevantArgs.length === 0 && !cmdOpts.source && !cmdOpts.file && !cmdOpts.url && !cmdOpts.jsonInput) { // check if only "autoinfer" or "autoinfer --verbose"
@@ -813,7 +796,6 @@ program
       return;
     }
     
-    // Default inferOptional to true for non-SQL sources if not explicitly set
     let inferOptional = cmdOpts.inferOptional; // Commander sets true if flag is present, false if --no-inferOptional, undefined otherwise.
     if (typeof cmdOpts.inferOptional === 'undefined') { // if neither --inferOptional nor --no-inferOptional was used
       inferOptional = !['mysql', 'postgresql'].includes(cmdOpts.source?.toLowerCase());
@@ -889,12 +871,12 @@ program
     }
 
     await processGeneration(options);
-    if (process.exitCode === 1) { // Check if processGeneration indicated an error
-        process.exit(1); // Propagate the error exit code
+    if (process.exitCode === 1) { 
+        process.exit(1); 
     }
   });
 
-// Simplified entry point logic
+// Entry point logic
 if (process.argv.length <= 2 || (process.argv.length === 3 && process.argv[2] === '--verbose')) {
     runInteractive().catch(() => process.exit(1)); // Ensure interactive errors also exit
 } else {

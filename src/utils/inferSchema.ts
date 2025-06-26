@@ -16,7 +16,7 @@ export function inferSchema(data: any): SchemaType {
   // Handle arrays
   if (Array.isArray(data)) {
     if (data.length === 0) {
-      return { type: 'array', items: { type: 'any' } as SchemaType }; // Use a placeholder like 'any'
+      return { type: 'array', items: { type: 'any' } as SchemaType }; 
     }
     const itemSchemas = data.map(item => inferSchema(item));
     return { type: 'array', items: mergeSchemas(itemSchemas) };

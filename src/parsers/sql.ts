@@ -1,23 +1,21 @@
-// parsers/sql.ts
-import { SchemaType } from '../utils/inferSchema'; // Adjust path as necessary
+import { SchemaType } from '../utils/inferSchema'; 
 
-// You'll need to install 'pg' and 'mysql2'
-// npm install pg mysql2
-// import { Client } from 'pg'; // For PostgreSQL
-// import mysql from 'mysql2/promise'; // For MySQL
 
 interface ColumnInfo {
   column_name: string;
   data_type: string;
+  column_type?: string;
   udt_name?: string; // PostgreSQL specific, often more useful (e.g., '_int4' for int array)
   is_nullable: 'YES' | 'NO';
   column_default?: string | null;
 }
 
-// Corrected: mapSqlTypeToSchemaType now returns SchemaType,
-// but it will only populate type, format, and items (for arrays).
-function mapSqlTypeToSchemaType(sqlType: string, udtName?: string): SchemaType {
+function mapSqlTypeToSchemaType(sqlType: string, udtName?: string, mySqlColumnType?: string): SchemaType {
   const type = (udtName || sqlType).toLowerCase();
+
+  if(mySqlColumnType === 'tinyint(1)') {
+    return { type: 'boolean' };
+  }
 
   // PostgreSQL specific array check (udt_name often starts with '_')
   if (udtName?.startsWith('_')) {
@@ -46,18 +44,13 @@ function mapSqlTypeToSchemaType(sqlType: string, udtName?: string): SchemaType {
   if (type.includes('uuid')) {
     return { type: 'string', format: 'uuid' };
   }
-  if (type.includes('json')) { // For JSON or JSONB columns
-    // For a JSON column, we know it's an object, but not its internal structure from INFORMATION_SCHEMA.
-    // So, we define it as an object type. The 'properties' will be empty here,
-    // indicating any properties are allowed, or it's a generic object.
-    // Actual inference of JSON column content would require sampling, which is out of scope for this direct SQL schema parser.
+  if (type.includes('json')) { 
     return { type: 'object', properties: {} }; // Represents a generic JSON object
   }
   if (type.includes('bytea') || type.includes('blob')) {
     return { type: 'string', format: 'binary' };
   }
-  // Fallback
-  return { type: 'string' }; // Default to string for unknown types
+  return { type: 'string' }; 
 }
 
 
@@ -65,9 +58,9 @@ export async function parseSqlTable(
   dbType: 'mysql' | 'postgresql',
   connectionString: string,
   tableName: string,
-  dbSchemaName?: string // e.g., 'public' for PostgreSQL, database name for MySQL if not in conn string
+  dbSchemaName?: string 
 ): Promise<SchemaType> {
-  let client: any; // pg.Client or mysql.Connection
+  let client: any; 
   const properties: Record<string, SchemaType> = {};
   const required: string[] = [];
 
@@ -106,19 +99,14 @@ export async function parseSqlTable(
       }
 
       query = `
-        SELECT column_name, data_type, is_nullable, column_default 
+        SELECT column_name, data_type, is_nullable, column_default, column_type 
         FROM information_schema.columns
         WHERE table_name = ? AND table_schema = ?;
       `;
-      // Note: For MySQL, information_schema.columns doesn't typically have udt_name in the same way as PG for arrays.
-      // The data_type column will give types like 'int', 'varchar', etc.
-      // MySQL array types are not standard SQL and are often handled via JSON or separate tables.
-      // This parser primarily handles standard column types.
       queryParams = [tableName, currentDb!];
       const [rowsFromExecute]: any = await client.execute(query, queryParams);
       results = rowsFromExecute;
     } else {
-      // Should not happen if dbType is validated before calling
       const exhaustiveCheck: never = dbType;
       throw new Error(`Unsupported SQL database type: ${exhaustiveCheck}`);
     }
@@ -130,10 +118,8 @@ export async function parseSqlTable(
     }
 
     for (const col of results) {
-      // For MySQL, udt_name might be undefined or less informative than data_type itself. Pass it if available.
-      const baseSchemaType = mapSqlTypeToSchemaType(col.data_type, col.udt_name);
+      const baseSchemaType = mapSqlTypeToSchemaType(col.data_type, col.udt_name, col.column_type);
 
-      // Corrected: baseSchemaType is now SchemaType, so .items is accessible if type is 'array'
       if (baseSchemaType.type === 'array') {
           properties[col.column_name] = {
               type: 'array',
@@ -142,9 +128,7 @@ export async function parseSqlTable(
       } else { // Regular type or object (for JSON)
           properties[col.column_name] = {
               type: baseSchemaType.type,
-              // Conditionally add format only if it exists on baseSchemaType
               ...(baseSchemaType.format && { format: baseSchemaType.format }),
-              // Conditionally add properties for object types (like JSON)
               ...(baseSchemaType.type === 'object' && { properties: baseSchemaType.properties || {} })
           };
       }
@@ -161,8 +145,7 @@ export async function parseSqlTable(
     };
   } catch (error: any) {
     let errorMessage = `Failed to parse SQL table '${tableName}' from ${dbType}: ${error.message}`;
-    // More specific error checks
-    if (error.code) { // Check if error object has a code (common in DB driver errors)
+    if (error.code) { 
         if (error.code === 'ECONNREFUSED') {
             errorMessage = `Connection refused for ${dbType}. Ensure database is running and connection string is correct.`;
         } else if (error.code === 'ENOTFOUND') {

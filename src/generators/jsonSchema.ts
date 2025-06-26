@@ -1,9 +1,9 @@
-import { SchemaType } from '../utils/inferSchema'; // Adjusted path
+import { SchemaType } from '../utils/inferSchema'; 
 
 export interface GenerateOptions {
   inferOptional: boolean;
   prettify: boolean;
-  interfaceName?: string; // This is schema "title"
+  interfaceName?: string; 
 }
 
 export function generateJsonSchema(schema: SchemaType, options: GenerateOptions): string {

@@ -59,13 +59,11 @@
 
 
 
-// parsers/mongodb.ts
-import { MongoClient, Document, ObjectId as MongoObjectId } from 'mongodb'; // Import ObjectId
+import { MongoClient, Document, ObjectId as MongoObjectId } from 'mongodb';
 import { inferSchema, SchemaType } from '../utils/inferSchema';
 
 const MAX_SAMPLE_SIZE = 100;
 
-// Helper function to recursively convert ObjectIds to strings
 function convertObjectIdsToStrings(data: any): any {
   if (data instanceof MongoObjectId) {
     return data.toString();
@@ -96,12 +94,10 @@ export async function parseMongoDbCollection(
     await client.connect();
     const db = client.db(dbName);
 
-    // --- Start: Fix for Issue 3 (Non-existent collection) ---
     const collections = await db.listCollections({ name: collectionName }).toArray();
     if (collections.length === 0) {
       throw new Error(`Collection '${collectionName}' not found in database '${dbName}'. Check if both Collection Name and DataBase name are correct.`);
     }
-    // --- End: Fix for Issue 3 ---
 
     const collection = db.collection(collectionName);
     const sampleDocs = await collection.find().limit(MAX_SAMPLE_SIZE).toArray();
@@ -111,14 +107,11 @@ export async function parseMongoDbCollection(
       return { type: 'object', properties: {}, required: [] };
     }
 
-    // --- Start: Fix for Issue 2 (Consistent ObjectId to string conversion) ---
     const processedDocs = sampleDocs.map(doc => convertObjectIdsToStrings(doc));
-    // --- End: Fix for Issue 2 ---
 
     return inferSchema(processedDocs);
 
   } catch (error: any) {
-    // Preserve specific error from collection check, otherwise create a general one
     if (error.message.startsWith("Collection '") && error.message.includes("' not found in database '")) {
         throw error;
     }
